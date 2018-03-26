@@ -1,29 +1,37 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import pprint, numpy, csv
+import getsheet
+import pprint, numpy, csv, sys
 
 def column(matrix, i):
     return [row[i] for row in matrix]
 
+def write_to_csv(filename, output):
+    with open(filename, 'w') as f:
+        wr = csv.writer(f)
+        for row in output:
+            wr.writerow(row)
+
 def main():
     printer = pprint.PrettyPrinter()
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-    client = gspread.authorize(creds)
 
-    spreadsheet = client.open_by_key('1F-mDcNMgpiLjxybfn6DhDYI7X_mClUwyVLxyrwztOhY')
+    if len(sys.argv) == 2:
+        sheet_key = sys.argv[1]
+    else:
+        exit()
+
+    spreadsheet = getsheet.open_spreadsheet(sheet_key)
     all_worksheets = spreadsheet.worksheets()
     responses = all_worksheets[0]
-    for worksheet in all_worksheets:
-        if worksheet != responses:
-            spreadsheet.del_worksheet(worksheet)
+    # for worksheet in all_worksheets:
+    #     if worksheet != responses:
+    #         spreadsheet.del_worksheet(worksheet)
+    spreadsheet.del_worksheet(all_worksheets[1])
     output_sheet = spreadsheet.add_worksheet('Averages', 1, 1)
 
     raw = responses.get_all_values()
     sheet = []
 
     for row in raw:
-        if row[1][1].isdecimal():
+        if row[1].isdecimal():
             converted = []
             for cell in row:
                 if len(cell) > 0:
@@ -34,48 +42,54 @@ def main():
                 sheet.append(converted)
 
     collected_teams = []
+    collected_matches = {}
     data = []
 
     for entry in sheet:
         team = entry[1]
+        match_number = entry[2]
+
+        if match_number not in collected_matches:
+            collected_matches[match_number] = 1
+        else:
+            collected_matches[match_number] = collected_matches[match_number] + 1
+
         if team not in collected_teams:
             collected_teams.append(team)
             data.append([team, []])
         index = collected_teams.index(team)
+
+
         entry[3] = 100 if entry[3] == b'Crossed' else 0 #baseline
-        entry[7] = 100 if entry[7] == b'Yes' else 0 #auto_drop
+        entry[7] = 100 if entry[7] == b'Yes' else 0 #auto_droçp
         match_data = entry[2:13]
-        match_data.append(sum(entry[8:10])) #tele_switch
+        match_data.append(entry[8] + entry[10]) #tele_switch
         match_data.append(sum(entry[8:12])) #tele_cube
+        match_data.append(entry[8] + entry[10] + entry[11])
         data[index][1].append(match_data)
 
+    # printer.pprint(collected_matches)
+    for match_number, value in collected_matches.items():
+        if value != 6:
+            print('Match #{} scouted {} times'.format(match_number, value))
+
     export = [['Team', 'Matches Scouted', 'Crossed %', 'Auto Switch', 'Auto Scale', 'Auto Exchange',
-        'Auto Drop %', 'Tele Switch', 'Tele Opp Switch', 'Tele Scale', 'Tele Exchange',
-        'Tele Drop', 'Tele Total Switch', 'Tele Total Cube']]
+        'Auto Drop %', 'Tele Switch', 'Tele Scale', 'Tele Opp Switch', 'Tele Exchange',
+        'Tele Drop', 'Tele Total Switch', 'Tele Total Cube', 'Tele Switch and Exchange']]
     for team in data:
         matches = []
-        match_indeces = []
         for match in team[1]:
             match_number = match[0]
             if match_number not in matches:
                 matches.append(match_number)
-                match_indeces.append(team[1].index(match))
             else:
-                print('{} has a duplicate match #{}'.format(team[0], match_number), end=' ')
-                discrepencies = 0
-                for i in range(team[1].index(match)+1):
-                    discrepencies += 1 if team[1][i] != match else 0
-                if discrepencies > 0
-                    print('and there is a discrepency ({})'.format(discrepencies))
+                print('Team #{} duplicate on Match #{}'.format(team[0], match_number))
         team_data = [team[0], len(team[1])]
         averages = [numpy.mean(column(team[1],i)) for i in range(1, len(team[1][0]))]
         team_data.extend(averages)
         export.append(team_data)
 
-    with open('export.csv', 'w') as f:
-        wr = csv.writer(f)
-        for row in export:
-            wr.writerow(row)
+    write_to_csv('export.csv', export)
 
     for row in export:
         output_sheet.append_row(row)
