@@ -21,10 +21,10 @@ def main():
     spreadsheet = getsheet.open_spreadsheet(sheet_key)
     all_worksheets = spreadsheet.worksheets()
     responses = all_worksheets[0]
-    # for worksheet in all_worksheets:
-    #     if worksheet != responses:
-    #         spreadsheet.del_worksheet(worksheet)
-    spreadsheet.del_worksheet(all_worksheets[1])
+    for worksheet in all_worksheets:
+        if worksheet != responses:
+            spreadsheet.del_worksheet(worksheet)
+    # spreadsheet.del_worksheet(all_worksheets[1])
     output_sheet = spreadsheet.add_worksheet('Averages', 1, 1)
 
     raw = responses.get_all_values()
@@ -61,7 +61,7 @@ def main():
 
 
         entry[3] = 100 if entry[3] == b'Crossed' else 0 #baseline
-        entry[7] = 100 if entry[7] == b'Yes' else 0 #auto_droçp
+        entry[7] = 100 if entry[7] == b'Yes' else 0 #auto_drop
         match_data = entry[2:13]
         match_data.append(entry[8] + entry[10]) #tele_switch
         match_data.append(sum(entry[8:12])) #tele_cube
