@@ -10,13 +10,8 @@ def write_to_csv(filename, output):
         for row in output:
             wr.writerow(row)
 
-def main():
+def main(sheet_key):
     printer = pprint.PrettyPrinter()
-
-    if len(sys.argv) == 2:
-        sheet_key = sys.argv[1]
-    else:
-        exit()
 
     spreadsheet = getsheet.open_spreadsheet(sheet_key)
     all_worksheets = spreadsheet.worksheets()
@@ -89,10 +84,14 @@ def main():
         team_data.extend(averages)
         export.append(team_data)
 
-    write_to_csv('export.csv', export)
+    # write_to_csv('export.csv', export)
 
     for row in export:
         output_sheet.append_row(row)
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) == 2:
+        sheet_key = sys.argv[1]
+    else:
+        exit()
+    main(sheet_key)
