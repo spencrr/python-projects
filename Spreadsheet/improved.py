@@ -2,8 +2,6 @@ import sys, csv, numpy, pprint
 import getsheet
 
 def main(sheet_key):
-    printer = pprint.PrettyPrinter()
-
     spreadsheet = getsheet.open_spreadsheet(sheet_key)
     worksheets = spreadsheet.worksheets()
     for i in range(1, len(worksheets)):
@@ -41,7 +39,7 @@ def main(sheet_key):
         else:
             teams[team].append(data)
 
-    # printer.pprint(teams)
+    # pprint(teams)
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:

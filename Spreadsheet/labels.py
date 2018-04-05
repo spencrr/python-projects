@@ -2,7 +2,6 @@ import sys, csv, numpy, pprint
 import getsheet
 
 def main(sheet_key):
-    printer = pprint.PrettyPrinter()
 
     spreadsheet = getsheet.open_spreadsheet(sheet_key)
     worksheets = spreadsheet.worksheets()
@@ -32,7 +31,8 @@ def main(sheet_key):
         else:
             unlabeled[team].append(data)
     averages = {}
-    printer.pprint(unlabeled)
+
+    pprint(unlabeled)
     for team in unlabeled:
         flip = numpy.transpose(unlabeled[team])[1:]
         transpose = [list(row) for row in flip]
@@ -43,7 +43,6 @@ def main(sheet_key):
 
     for row in export:
         output.append_row(row)
-    # printer.pprint(export)
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
