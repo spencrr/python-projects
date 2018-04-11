@@ -1,4 +1,5 @@
 
+
 class network:
     import math, random
     def __init__(self, neuron_matrix):
