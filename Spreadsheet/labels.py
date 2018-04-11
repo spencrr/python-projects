@@ -3,7 +3,7 @@ from pprint import pprint
 import getsheet
 
 def main(sheet_key, input_title, output_title):
-    label_ranges = (('Team', [1]), ('Match', [3]), ('Baseline', [2]), ('Auto Switch', [4]), ('Auto Scale', [5]),
+    label_ranges = (('Team', [1]), ('Match', [2]), ('Baseline', [3]), ('Auto Switch', [4]), ('Auto Scale', [5]),
         ('Switch', [8]), ('Scale', [9]), ('Opp Switch', [10]), ('Exchange', [11]), ('Climb', [17]),
         ('Total Switch', [8, 10]), ('Total Switch & Exchange', [8, 10, 11]), ('Total Cube', [8, 9, 10, 11]))
     labels = [label[0] for label in label_ranges]
@@ -31,21 +31,35 @@ def main(sheet_key, input_title, output_title):
         else:
             teams[team].append(data)
 
-    averages = {}
+    filtered = {}
     for team in teams:
-        flip = numpy.transpose(teams[team])[1:]
+        if not len(teams[team]) < 3:
+            filtered[team] = teams[team]
+            matches = {}
+            for match in teams[team]:
+                num = match[0]
+                if num not in matches:
+                    matches[num] = 1
+                else:
+                    matches[num] += 1
+            for num in matches:
+                if matches[num] > 1:
+                    print ('{} has {} match {}'.format(team, matches[num], num))
+
+    averages = {}
+    for team in filtered:
+        flip = numpy.transpose(filtered[team])[1:]
         transpose = [list(row) for row in flip]
         averages[team] = [numpy.mean(row) for row in transpose]
-    export = [labels] + [[team, len(teams[team])] + averages[team] for team in averages]
+    export = [labels] + [[team, len(filtered[team])] + averages[team] for team in averages]
 
     row_len = len(export)
     col_len = len(labels)
-
-    pprint(export)
-
     write_sheet(output_sheet, export, row_len, col_len)
 
 def write_sheet(output_sheet, data_matrix, row_len, col_len):
+    output_sheet.clear()
+    output_sheet.resize(2, 2)
     cell_list = output_sheet.range(1, 1, row_len, col_len)
     index = 0
     for cell in cell_list:
@@ -60,6 +74,5 @@ if __name__ == '__main__':
         sheet_key = sys.argv[1]
         input_title = sys.argv[2] if len(sys.argv) >= 3 else 'Responses'
         output_title = sys.argv[3] if len(sys.argv) >= 4 else 'Averages'
-    else:
-        exit()
-    main(sheet_key, input_title, output_title)
+        main(sheet_key, input_title, output_title)
+    exit()

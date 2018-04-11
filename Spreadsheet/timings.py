@@ -1,16 +1,17 @@
 import time
-import average_each_team, improved, labels, getsheet
+import labels
 
-q = 'Qualification Responses'
+def timing(func):
+    def wrapper(*args, **kwargs):
+        import time
+        s = time.time()
+        func(*args, **kwargs)
+        t = time.time() - s
+        print('Ran ' + '''func.__name__''' + ' in {} sec'.format(t))
+    return wrapper
 
-getsheet.open_spreadsheet(q)
+@timing
+def run():
+    labels.main('Qualification Responses', 'Responses', 'Averages')
 
-timer = time.time()
-average_each_team.main(q)
-print(time.time() - timer)
-# timer = time.time()
-# improved.main(q)
-# print(time.time() - timer)
-timer = time.time()
-labels.main(q)
-print(time.time() - timer)
+run()
