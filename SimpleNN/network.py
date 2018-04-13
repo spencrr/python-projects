@@ -1,47 +1,41 @@
-
-
 class network:
-    import math, random
-    def __init__(self, neuron_matrix):
-        self.layers = [self.layer(n) for n in neuron_matrix]
+    import numpy as np
 
-    def feed_forward(input_vector):
-        if len(input_vector) == len(self.layers[0]):
-            for layer in layers:
-                input_vector = layer.run(input_vector)
-            return input_vector[:-1]
+    @staticmethod
+    def relu(z, d=False):
+        if d:
+            n = network.relu(z)
+            return n * (1 - n)
+        return 1 / (1 + np.exp(-z))
 
-    class layer:
-        def __init__(self, n):
-            self.neurons = [self.neuron(n) for i in range(n)]
+    @staticmethod
+    def cost(a, b, d=False):
+        if d:
+            return a - b
+        return 0.5 * network.np.sum((a - b) ** 2)
 
-        def __len__(self):
-            return len(self.neurons)
+    def __init__(self, input, v, output):
+        # np.random.seed(1)
+        v.append(output)
+        self.syn = []
+        for l in range(len(v)):
+            self.syn.append(network.np.ndarray(shape=(v[l], input), buffer=np.random.uniform(-1, 1, v[l] * (input + 1))))
+            input = v[l]
+        self.syn = np.array(self.syn)
 
-        def run(self, input):
-            return [n.output(input) for n in self.neurons]
+    def feed(self, input_vector):
+        self.output_matrix = []
+        for l in self.syn:
+            print(input_vector, l.T)
+            input_vector = network.relu(np.dot(input_vector, l.T))
+            self.output_matrix.append(input_vector)
+        return input_vector
 
-        class neuron:
-            @staticmethod
-            def sigmoid(x):
-                return 1 / ( 1 + network.math.e ** -x)
 
-            def __init__(self, input_len):
-                self.value = 1
-                self.weights = [self.weight() for i in range(input_len)]
+def main():
+    n = network(100, [100, 100, 100, 100, 100], 100)
+    import numpy as np
+    n.feed(np.random.uniform(-1, 1, 100))
 
-            def output(input):
-                return neuron.sigmoid(sum(input))
-
-            class weight:
-
-                def __init__(self):
-                    self.value = network.random.uniform(-1, 1)
-
-                def next(self, v):
-                    self.new = v
-
-                def update(self):
-                    self.value = self.new
-
-n = network([5,5,5])
+if __name__ == '__main__':
+    main()
