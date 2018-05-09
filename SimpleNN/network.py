@@ -27,7 +27,7 @@ class network:
     def feed(self, input_vector):
         self.output_matrix = []
         for l in self.syn:
-            input_vector = network.relu(np.dot(input_vector, l.T))
+            input_vector = network.relu(l * input_vector)
             self.output_matrix.append(input_vector)
         return input_vector
 
