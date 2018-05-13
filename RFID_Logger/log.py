@@ -1,52 +1,55 @@
 import interface
 import datetime, time, random
 from pprint import pprint
-def main():
-    names = {1: 'Spencer', 2: 'Ethan', 3: 'Brennan'}
-    log = [(1, 3600), (2, 12000), (3, 18000), (1, 3600 * 2), (2, 12000 * 2), (3, 18000 * 2)]
 
+names = {1: 'Spencer', 2: 'Ethan', 3: 'Brennan', 4: 'John'}
+log = [(1, 1), (2, 1), (3, 1), (1, 3600), (2, 3600), (3, 3600), (4, 1), (4, 3600), (4, 3600), (4, 7200), (4, 7200), (4, 7400)]
+
+def simulate_data():
     connect = interface.database.open_connection('database.db')
-    connect.delete_table('rawLog')
-    connect.delete_table('timeLog')
-    rawLog = connect.create_table('rawLog', 'id, timestamp', 'REAL, REAL')
-    for i in range(2):
-        for id, timestamp in log:
-            connect.insert_entry(rawLog, (id, round(i * timestamp, 0)))
-    connect.print_all_entries(rawLog)
-    signInLog = connect.create_table('signInLog', 'id, timeIn, timeOut, timeLength', 'REAL, REAL, REAL, REAL')
-
-    users = []
+    connect.delete_table('raw')
+    raw = connect.create_table('raw', 'id, timestamp', 'REAL, REAL')
     for id, timestamp in log:
-        if id not in users:
-            users.append(id)
-            sign_in = None
-            sign_out = None
-            for entry in connect.select_entries(rawLog, to_select='timestamp', conditions='id={}'.format(id)):
-                entry = entry[0]
-                if not sign_in:
-                    sign_in = entry
-                else:
-                    sign_out = entry
-                    logTime = sign_out - sign_in
-                    if len(connect.select_entries(signInLog, conditions='timeIn={}'.format(sign_in))) == 0:
-                        connect.insert_entry(signInLog, (id, sign_in, sign_out, logTime))
-                    sign_out = None
-                    sign_in = None
+        raw.insert_entry((id, round(timestamp, 0)))
 
-    connect.print_all_entries(signInLog)
-    timeLog = connect.create_table('timeLog', 'name, hours', 'TEXT, REAL')
-    users = {}
-    for id, timeLength in connect.select_entries(signInLog, to_select='id, timeLength'):
-        name = names[id]
-        if name not in users:
-            users[name] = timeLength
+def main():
+    connect = interface.database.open_connection('database.db')
+    raw = connect.create_table('raw', 'id, timestamp', 'REAL, REAL')
+    signIn = connect.create_table('signIn', 'id, timeIn, timeOut, seconds', 'REAL, REAL, REAL, REAL')
+    times = connect.create_table('times', 'id, hours', 'REAL, REAL')
+    last = {}
+    for id, timestamp in raw.select_entries():
+        if id not in last:
+            last[id] = timestamp
         else:
-            users[name] += timeLength
-    for user, seconds in users.items():
-        connect.insert_entry(timeLog, (user, round(seconds / 3600, 1)))
+            if len(signIn.select_entries(conditions='id={} AND timeIn={} AND timeOut={}'.format(id, last[id], timestamp))) == 0:
+                signIn.insert_entry((id, last[id], timestamp, timestamp-last[id]))
+            del(last[id])
 
-    connect.print_all_entries(timeLog)
+    total = {}
+    for id, seconds in signIn.select_entries(to_select='id, seconds'):
+        if id not in total:
+            total[id] = seconds
+        else:
+            total[id] += seconds
+
+    times_list = [tup[0] for tup in times.select_entries()]
+    for id, seconds in total.items():
+        total[id] = round(seconds / 3600, 1)
+        if id not in times_list:
+            times.insert_entry((id, total[id]))
+    for id, hours in times.select_entries():
+        if total[id] != hours:
+            times.update_entries('hours={}'.format(total[id]), conditions='id={}'.format(id))
     connect.close_connection()
 
 if __name__ == '__main__':
+    simulate_data()
     main()
+    # times = []
+    # for i in range(10000):
+    #     t = time.time()
+    #     main()
+    #     t = round(time.time() - t, 5)
+    #     times.append(t)
+    # print('avg: {}'.format(sum(times)/len(times)))
