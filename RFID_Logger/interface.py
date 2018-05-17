@@ -66,7 +66,7 @@ class database:
             self.database.connection.cursor().execute('DELETE FROM {} {}'.format(self.name, conditions))
 
         def __str__(self):
-            s = ('Entries in {}:'.format(self.name))
+            s = ('Entries in {}:\n'.format(self.name))
             for row in self.select_entries():
                 s += str(row) + '\n'
             return(s)
