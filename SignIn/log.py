@@ -11,7 +11,7 @@ def simulate_data():
     for id in range(1, 5):
         for j in range(60):
             log.append((id, j * 3600))
-            log.append((id, (pow() + 50) * 3600))
+            log.append((id, (j + 50) * 3600))
     for id, timestamp in log:
         raw.insert_entry((id, round(timestamp, 0)))
 
