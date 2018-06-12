@@ -14,7 +14,7 @@ def main():
 	sheet = spreadsheet.get_worksheet(0)
 	pprint(sheet.get_all_values())
 
-
 if __name__ == '__main__':
 	main()
-	exit()
+	for o in dir():
+		pprint((o, type(o), dir(o)))
