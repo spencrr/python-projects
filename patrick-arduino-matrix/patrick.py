@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 def rowFormat(matrix):
 	end = ''
 	for i in range(len(matrix)):
@@ -8,14 +9,6 @@ def rowFormat(matrix):
 			end += ',\n'
 	return end
 
-# def toMatrix(str):
-# 	numbers = str.split(',')
-# 	rows = []
-# 	for i in range(17):
-# 		n = (i) * 17
-# 		rows.append(numbers[i * 17: (i + 1) * 17])
-# 	return rows
-
 from PIL import Image
 from pprint import pprint
 
@@ -23,7 +16,7 @@ size = 17
 dimen = (size, size)
 
 
-im = Image.open('i.bmp') #CHANGE IMAGE NAME
+im = Image.open('i.bmp') 
 im.resize(dimen)
 pixels = im.load()
 
@@ -31,8 +24,6 @@ pix_matrix = []
 for i in range(size):
 	pix_matrix.append(['0x%02x%02x%02x' % pixels[i , j] for j in range(size)])
 
-#for processing
 print(str(pix_matrix).replace("\'", "").replace('[', '{').replace(']', '}') + '\n\n')
 
-#for your arduino
 print(rowFormat(pix_matrix))
